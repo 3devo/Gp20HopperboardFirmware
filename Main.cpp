@@ -12,10 +12,10 @@
 
 
 #if defined(ENABLE_SERIAL)
-HardwareSerial DebugSerial(DEBUG_TX, NC)
+HardwareSerial DebugSerial(DEBUG_TX);
 #endif
 
-HardwareSerial RS485(RS485_TX, RS485_RX);
+HardwareSerial RS485(RS485_RX, RS485_TX);
 TwoWire WireIR(IRBOARD_SCL, IRBOARD_SDA);
 TwoWire WireIface(IFACEBOARD_SCL, IFACEBOARD_SDA);
 
