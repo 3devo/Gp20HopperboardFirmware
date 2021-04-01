@@ -31,6 +31,11 @@ void setup() {
   DebugSerial.begin(1000000);
   DebugSerial.println("Starting");
 #endif
+  RS485.begin(115200);
+  // Configure PA11/PA12 to disable remapping of PA9/PA10
+  // https://github.com/stm32duino/Arduino_Core_STM32/issues/1180
+  pinMode(PA11, INPUT);
+  pinMode(PA12, INPUT);
 
   pinMode(STATUS_PIN, OUTPUT);
 }
