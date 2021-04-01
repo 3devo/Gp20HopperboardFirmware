@@ -7,9 +7,8 @@
 #include <Wire.h>
 #include "Hardware.h"
 
-//Note: This reuses the SWCLK pin, so this disables SWD!
-//#define ENABLE_SERIAL
-
+// Note: This reuses the stepper MODE2 pin!
+#define ENABLE_SERIAL
 
 #if defined(ENABLE_SERIAL)
 HardwareSerial DebugSerial(DEBUG_TX);

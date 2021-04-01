@@ -6,7 +6,7 @@
 
 #include <Arduino.h>
 
-static const uint32_t DEBUG_TX = PA14;
+static const uint32_t DEBUG_TX = PA2;
 
 // I2C2
 static const uint32_t IRBOARD_SCL = PB10;
