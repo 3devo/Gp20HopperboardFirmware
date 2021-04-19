@@ -1,0 +1,6 @@
+[submodule "hardware/STM32-3devo/stm32"]
+	path = hardware/STM32-3devo/stm32
+	url = https://github.com/3devo/Arduino_Core_STM32.git
+[submodule "hardware/Arduino-3devo"]
+	path = hardware/Arduino-3devo
+	url = https://github.com/3devo/Arduino-3devo.git
