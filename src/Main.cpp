@@ -5,7 +5,7 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include "Hardware.h"
+#include "Config.h"
 
 // Note: This reuses the stepper MODE2 pin!
 #define ENABLE_SERIAL
