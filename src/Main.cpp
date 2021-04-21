@@ -8,6 +8,8 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <stdio.h>
+#include "Bus.h"
+#include "BaseProtocol.h"
 #include "Config.h"
 
 // Note: This reuses the stepper MODE2 pin!
@@ -17,9 +19,14 @@
 HardwareSerial DebugSerial(DEBUG_TX);
 #endif
 
-HardwareSerial RS485(RS485_RX, RS485_TX);
 TwoWire WireIR(IRBOARD_SCL, IRBOARD_SDA);
 TwoWire WireIface(IFACEBOARD_SCL, IFACEBOARD_SDA);
+
+struct Commands {
+  enum {
+    GET_LAST_STATUS = 0x80,
+  };
+};
 
 #if defined(ENABLE_SERIAL)
 static ssize_t uart_putchar (void *, const char *buf, size_t len) {
@@ -42,6 +49,25 @@ void clear_interrupt_pin() {
   digitalWrite(STATUS_PIN, LOW);
 }
 
+cmd_result processCommand(uint8_t cmd, uint8_t * /*datain*/, uint8_t len, uint8_t *dataout, uint8_t maxLen) {
+  switch (cmd) {
+    case Commands::GET_LAST_STATUS: {
+      if (len != 0 || maxLen < 1)
+        return cmd_result(Status::INVALID_ARGUMENTS);
+
+      // Note that we run inside an interrupt, so there is no race condition here
+      clear_interrupt_pin();
+
+      // Dummy value
+      dataout[0] = 1;
+
+      return cmd_result(Status::COMMAND_OK, 1);
+    }
+    default:
+      return cmd_result(Status::COMMAND_NOT_SUPPORTED);
+  }
+}
+
 void setup() {
 #if defined(ENABLE_SERIAL)
   DebugSerial.begin(1000000);
@@ -51,14 +77,17 @@ void setup() {
   /* Disable buffering, so the callbacks get called right away */
   setbuf(stdout, nullptr);
 #endif
-  RS485.begin(115200);
+
   // Configure PA11/PA12 to disable remapping of PA9/PA10
   // https://github.com/stm32duino/Arduino_Core_STM32/issues/1180
   pinMode(PA11, INPUT);
   pinMode(PA12, INPUT);
 
   pinMode(STATUS_PIN, OUTPUT);
+
+  BusInit(INITIAL_ADDRESS, INITIAL_BITS);
 }
 
 void loop() {
+  BusUpdate();
 }
