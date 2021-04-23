@@ -32,7 +32,7 @@ const uint8_t INFO_HW_TYPE = 0;
 const uint8_t INITIAL_ADDRESS = 128;
 const uint8_t INITIAL_BITS = 8;
 
-const uint8_t PROTOCOL_VERSION = 0x0101;
+const uint8_t PROTOCOL_VERSION = 0x0000;
 const uint16_t MAX_PACKET_LENGTH = 32;
 
 // TODO: Enable interrupts instead of polling in loops. Does not work,
