@@ -12,7 +12,7 @@
 #include "BaseProtocol.h"
 #include "Config.h"
 
-// Note: This reuses the stepper MODE2 pin!
+// Note: On protoboard < v0.3, this reuses the stepper MODE2 pin!
 #define ENABLE_SERIAL
 
 #if defined(ENABLE_SERIAL)
