@@ -29,7 +29,7 @@ const uint8_t INFO_HW_TYPE = 0;
 
 // By default, listen to addresses a single address, different from the
 // bootloader and auto-assigned ranges
-const uint8_t INITIAL_ADDRESS = 128;
+const uint8_t INITIAL_ADDRESS = 8;
 const uint8_t INITIAL_BITS = 8;
 
 const uint8_t PROTOCOL_VERSION = 0x0000;
