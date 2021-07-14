@@ -49,7 +49,9 @@ void clear_interrupt_pin() {
   digitalWrite(STATUS_PIN, HIGH);
 }
 
-cmd_result processCommand(uint8_t cmd, uint8_t * /*datain*/, uint8_t len, uint8_t *dataout, uint8_t maxLen) {
+// Note: This runs inside an ISR, so be sure to use volatile and disable
+// interrupts elsewhere as appropriate.
+cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *dataout, uint8_t maxLen) {
   switch (cmd) {
     case Commands::GET_LAST_STATUS: {
       if (len != 0 || maxLen < 1)
@@ -90,5 +92,4 @@ void setup() {
 }
 
 void loop() {
-  BusUpdate();
 }

@@ -35,9 +35,6 @@ const uint8_t INITIAL_BITS = 8;
 const uint8_t PROTOCOL_VERSION = 0x0000;
 const uint16_t MAX_PACKET_LENGTH = 32;
 
-// TODO: Enable interrupts instead of polling in loops. Does not work,
-// because the Arduino core defines ISRs for all USARTs, leading to
-// linker errors.
-//#define RS485_USE_INTERRUPTS
+#define BUS_USE_INTERRUPTS
 #define USE_RS485
 #define USE_LL_HAL
