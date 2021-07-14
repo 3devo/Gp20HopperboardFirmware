@@ -65,6 +65,8 @@
 	#define RST_USART1 0
 	#define rcc_periph_reset_pulse(instance) LL_APB2_GRP1_ForceReset(LL_APB2_GRP1_PERIPH_USART1)
 	#define usart1_isr USART1_IRQHandler
+	#define nvic_enable_irq NVIC_EnableIRQ
+	#define NVIC_USART1_IRQ USART1_IRQn
 #endif // defined(USE_LL_HAL)
 
 static uint8_t initAddress = 0;
@@ -86,18 +88,6 @@ void BusInit(uint8_t initialAddress, uint8_t initialBits) {
 	/* Setup clocks & GPIO for USART */
 	rcc_periph_clock_enable(RCC_USART1);
 	rcc_periph_clock_enable(RCC_GPIOA);
-	#if defined(USE_LL_HAL)
-	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_9, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_10, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_12, LL_GPIO_MODE_ALTERNATE);
-	LL_GPIO_SetAFPin_8_15(GPIOA, LL_GPIO_PIN_9, LL_GPIO_AF_1);
-	LL_GPIO_SetAFPin_8_15(GPIOA, LL_GPIO_PIN_10, LL_GPIO_AF_1);
-	LL_GPIO_SetAFPin_8_15(GPIOA, LL_GPIO_PIN_12, LL_GPIO_AF_1);
-	#else
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9 | GPIO10 | GPIO12);
-	// RX & TX & RTS/DE
-	gpio_set_af(GPIOA, GPIO_AF1, GPIO9 | GPIO10 | GPIO12);
-	#endif
 
 	/* Setup USART parameters. */
 	usart_set_baudrate(USART1, BAUD_RATE);
@@ -114,8 +104,23 @@ void BusInit(uint8_t initialAddress, uint8_t initialBits) {
 	/* Finally enable the USART. */
 	usart_enable(USART1);
 
-	#if defined(RS485_USE_INTERRUPTS)
-	USART_CR1(USART1) |= USART_CR1_TXEIE | USART_CR1_RXNEIE | USART_CR1_RTOIE;
+	// RX & TX & RTS/DE
+	#if defined(USE_LL_HAL)
+	LL_GPIO_SetAFPin_8_15(GPIOA, LL_GPIO_PIN_9, LL_GPIO_AF_1);
+	LL_GPIO_SetAFPin_8_15(GPIOA, LL_GPIO_PIN_10, LL_GPIO_AF_1);
+	LL_GPIO_SetAFPin_8_15(GPIOA, LL_GPIO_PIN_12, LL_GPIO_AF_1);
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_9, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_10, LL_GPIO_MODE_ALTERNATE);
+	LL_GPIO_SetPinMode(GPIOA, LL_GPIO_PIN_12, LL_GPIO_MODE_ALTERNATE);
+	#else
+	gpio_set_af(GPIOA, GPIO_AF1, GPIO9 | GPIO10 | GPIO12);
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9 | GPIO10 | GPIO12);
+	#endif
+
+	#if defined(BUS_USE_INTERRUPTS)
+	// Call update once to set up the right interrupt enables
+	BusUpdate();
+	nvic_enable_irq(NVIC_USART1_IRQ);
 	#endif
 }
 
@@ -251,10 +256,17 @@ void BusUpdate() {
 			busState = StateIdle;
 		}
 	}
+	if (busState == StateWrite) {
+		USART_CR1(USART1) |= USART_CR1_TXEIE;
+		USART_CR1(USART1) &= ~(USART_CR1_RXNEIE | USART_CR1_RTOIE);
+	} else {
+		USART_CR1(USART1) &= ~USART_CR1_TXEIE;
+		USART_CR1(USART1) |= USART_CR1_RXNEIE | USART_CR1_RTOIE;
+	}
 	#undef printf
 }
 
-#if defined(RS485_USE_INTERRUPTS)
+#if defined(BUS_USE_INTERRUPTS)
 extern "C" void usart1_isr() {
 	BusUpdate();
 }
