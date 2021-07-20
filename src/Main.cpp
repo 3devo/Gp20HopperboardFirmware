@@ -11,12 +11,15 @@
 #include "Bus.h"
 #include "BaseProtocol.h"
 #include "Config.h"
+#include "Stepper.h"
 
 #if defined(ENABLE_SERIAL)
 HardwareSerial DebugSerial(DEBUG_TX);
 #endif
 
 TwoWire WireIR(IRBOARD_SDA, IRBOARD_SCL);
+
+Stepper stepper(STEPPER_NENBL, STEPPER_DIR, STEPPER_STEP, STEPPER_NFAULT);
 
 struct Commands {
   enum {
@@ -91,6 +94,21 @@ void setup() {
 
   pinMode(STATUS_PIN, OUTPUT);
   clear_interrupt_pin();
+
+  // For simplicity, just hardcode these pins that can have fixed values
+  // here, rather than passing them into the Stepper class with all the
+  // extra overhead that results in.
+  pinMode(MODE0, OUTPUT);
+  pinMode(MODE1, OUTPUT);
+  pinMode(MODE2, OUTPUT);
+  digitalWrite(MODE0, HIGH);
+  digitalWrite(MODE1, HIGH);
+  digitalWrite(MODE2, HIGH);
+
+  pinMode(STEPPER_NSLEEP, OUTPUT);
+  digitalWrite(STEPPER_NSLEEP, HIGH);
+
+  stepper.setup();
 
   BusInit(INITIAL_ADDRESS, INITIAL_BITS);
 }
