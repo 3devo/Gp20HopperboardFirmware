@@ -37,6 +37,14 @@ static cookie_io_functions_t functions = {
 };
 #endif // defined(ENABLE_SERIAL)
 
+#if defined(ENABLE_SERIAL)
+// Override the (weak) error handler defined by the STM32 core to
+// // capture errors with our usual handling.
+void _Error_Handler(const char *file, int line) {
+  printf("STM32 core error: %s:%d\n", file, line);
+}
+#endif // defined(ENABLE_SERIAL)
+
 void assert_interrupt_pin() {
   digitalWrite(STATUS_PIN, LOW);
 }
