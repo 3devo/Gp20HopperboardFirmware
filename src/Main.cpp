@@ -17,7 +17,6 @@ HardwareSerial DebugSerial(DEBUG_TX);
 #endif
 
 TwoWire WireIR(IRBOARD_SCL, IRBOARD_SDA);
-TwoWire WireIface(IFACEBOARD_SCL, IFACEBOARD_SDA);
 
 struct Commands {
   enum {

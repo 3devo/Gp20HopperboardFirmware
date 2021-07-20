@@ -13,10 +13,6 @@ static const uint32_t DEBUG_TX = PA2;
 static const uint32_t IRBOARD_SCL = PB10;
 static const uint32_t IRBOARD_SDA = PB11;
 
-// I2C1
-static const uint32_t IFACEBOARD_SCL = PB6;
-static const uint32_t IFACEBOARD_SDA = PB7;
-
 // UART1
 static const uint32_t RS485_TX = PA9;
 static const uint32_t RS485_RX = PA10;
