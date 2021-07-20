@@ -26,6 +26,7 @@ IrSensor ir_sensor(WireIR, LED_DRIVER_ADDR, ADC_ADDR);
 struct Commands {
   enum {
     GET_LAST_STATUS = 0x80,
+    SET_STATE = 0x81,
   };
 };
 
@@ -79,6 +80,22 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
       dataout[0] = 1;
 
       return cmd_result(Status::COMMAND_OK, 1);
+    }
+    case Commands::SET_STATE: {
+      if (len != 4)
+        return cmd_result(Status::INVALID_ARGUMENTS);
+
+      uint16_t speed = datain[0] << 8 | datain[1];
+      bool enabled = datain[2];
+      bool reversed = datain[3];
+      #if defined(ENABLE_SERIAL)
+      printf("SET_STATE enabled=%u, speed=%u, reversed=%u\n", enabled, speed, reversed);
+      #endif
+      stepper.set_speed(speed);
+      stepper.set_enabled(enabled);
+      stepper.set_reversed(reversed);
+
+      return cmd_result(Status::COMMAND_OK);
     }
     default:
       return cmd_result(Status::COMMAND_NOT_SUPPORTED);
