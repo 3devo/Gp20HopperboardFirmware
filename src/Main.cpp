@@ -56,6 +56,12 @@ void clear_interrupt_pin() {
   digitalWrite(STATUS_PIN, HIGH);
 }
 
+void general_call_reset(TwoWire& wire) {
+  wire.beginTransmission(0x00);
+  wire.write(0x06);
+  wire.endTransmission();
+}
+
 // Note: This runs inside an ISR, so be sure to use volatile and disable
 // interrupts elsewhere as appropriate.
 cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *dataout, uint8_t maxLen) {
@@ -92,6 +98,10 @@ void setup() {
   // Also, HS mode seems to require additional handshaking.
   WireIR.setClock(400000);
   WireIR.begin();
+
+  general_call_reset(WireIR);
+  // PCA9955B needs max 1ms
+  delay(1);
 
   // Configure PA11/PA12 to disable remapping of PA9/PA10
   // https://github.com/stm32duino/Arduino_Core_STM32/issues/1180
