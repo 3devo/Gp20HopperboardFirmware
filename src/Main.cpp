@@ -76,10 +76,10 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
       // Note that we run inside an interrupt, so there is no race condition here
       clear_interrupt_pin();
 
-      // Dummy value
-      dataout[0] = 1;
+      dataout[0] = ir_sensor.get_and_clear_errors();
+      dataout[1] = stepper.get_and_clear_errors();
 
-      return cmd_result(Status::COMMAND_OK, 1);
+      return cmd_result(Status::COMMAND_OK, 2);
     }
     case Commands::SET_STATE: {
       if (len != 4)
@@ -153,4 +153,7 @@ static uint16_t loop_count = 0;
 void loop() {
   bool print = (loop_count++ % 512) == 0;
   ir_sensor.do_reading(print);
+
+  if (ir_sensor.error_occured() || stepper.error_occured())
+    assert_interrupt_pin();
 }
