@@ -150,4 +150,5 @@ void setup() {
 }
 
 void loop() {
+  ir_sensor.do_reading();
 }
