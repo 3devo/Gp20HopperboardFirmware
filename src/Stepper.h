@@ -22,6 +22,9 @@ class Stepper {
 
       this->timer = new HardwareTimer((TIM_TypeDef *)pinmap_peripheral(digitalPinToPinName(this->pin_step), PinMap_PWM));
       this->timer_channel = STM_PIN_CHANNEL(pinmap_function(digitalPinToPinName(this->pin_step), PinMap_PWM));
+
+      attachInterrupt(this->pin_fault, [this]() { this->fault_triggered = true; }, FALLING);
+      this->fault_triggered = (digitalRead(this->pin_fault) == LOW);
     }
 
     void set_enabled(bool enabled) {
@@ -37,8 +40,13 @@ class Stepper {
         this->timer->setPWM(this->timer_channel, this->pin_step, freq, 50 /* % DC */);
     }
 
-    bool has_fault() {
-      return digitalRead(this->pin_fault) == LOW;
+    bool error_occured() { return this->fault_triggered; };
+    uint8_t get_and_clear_errors() {
+      // Note: This should be called with interrupts disabled to prevent
+      // a small race condition
+      auto res = this->fault_triggered;
+      this->fault_triggered = false;
+      return res;
     }
 
   private:
@@ -49,4 +57,6 @@ class Stepper {
 
     HardwareTimer *timer;
     uint32_t timer_channel;
+
+    volatile bool fault_triggered;
 };
