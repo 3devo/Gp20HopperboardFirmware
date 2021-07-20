@@ -13,7 +13,7 @@ class IrSensor {
     { }
 
     void setup();
-    void do_reading();
+    void do_reading(bool print);
     void get_last_reading(uint8_t (&output)[ADC_NUM_CHANNELS]);
 
     struct ErrorFlags {

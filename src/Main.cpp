@@ -149,6 +149,8 @@ void setup() {
   BusInit(INITIAL_ADDRESS, INITIAL_BITS);
 }
 
+static uint16_t loop_count = 0;
 void loop() {
-  ir_sensor.do_reading();
+  bool print = (loop_count++ % 512) == 0;
+  ir_sensor.do_reading(print);
 }

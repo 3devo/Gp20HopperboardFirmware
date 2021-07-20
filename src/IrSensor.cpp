@@ -26,7 +26,7 @@ void IrSensor::setup() {
   config_leds(Pca9955bRegs::IREFALL, 127);
 }
 
-void IrSensor::do_reading() {
+void IrSensor::do_reading(bool print) {
   uint8_t measurement[ADC_NUM_CHANNELS];
 
   set_leds_pwm(255);
@@ -41,7 +41,8 @@ void IrSensor::do_reading() {
   memcpy(this->last_measurement, measurement, sizeof(this->last_measurement));
   interrupts();
 
-  print_measurement("RAW", measurement);
+  if (print)
+    print_measurement("RAW", measurement);
 }
 
 void IrSensor::print_measurement(const char *title, const uint8_t (&m)[ADC_NUM_CHANNELS]) {
