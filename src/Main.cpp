@@ -12,6 +12,7 @@
 #include "BaseProtocol.h"
 #include "Config.h"
 #include "Stepper.h"
+#include "IrSensor.h"
 
 #if defined(ENABLE_SERIAL)
 HardwareSerial DebugSerial(DEBUG_TX);
@@ -20,6 +21,7 @@ HardwareSerial DebugSerial(DEBUG_TX);
 TwoWire WireIR(IRBOARD_SDA, IRBOARD_SCL);
 
 Stepper stepper(STEPPER_NENBL, STEPPER_DIR, STEPPER_STEP, STEPPER_NFAULT);
+IrSensor ir_sensor(WireIR, LED_DRIVER_ADDR, ADC_ADDR);
 
 struct Commands {
   enum {
@@ -125,6 +127,7 @@ void setup() {
   digitalWrite(STEPPER_NSLEEP, HIGH);
 
   stepper.setup();
+  ir_sensor.setup();
 
   BusInit(INITIAL_ADDRESS, INITIAL_BITS);
 }
