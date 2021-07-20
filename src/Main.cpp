@@ -87,6 +87,12 @@ void setup() {
   setbuf(stdout, nullptr);
 #endif
 
+  // Use fast-mode 400kHz speed. PCA9955B can go up to 1Mhz and MAX11600
+  // up to 1.7Mhz, but limit speed to decrease noise susceptibility.
+  // Also, HS mode seems to require additional handshaking.
+  WireIR.setClock(400000);
+  WireIR.begin();
+
   // Configure PA11/PA12 to disable remapping of PA9/PA10
   // https://github.com/stm32duino/Arduino_Core_STM32/issues/1180
   pinMode(PA11, INPUT);
