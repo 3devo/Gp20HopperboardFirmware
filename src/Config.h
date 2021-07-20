@@ -54,3 +54,6 @@ const uint16_t MAX_PACKET_LENGTH = 32;
 #define BUS_USE_INTERRUPTS
 #define USE_RS485
 #define USE_LL_HAL
+
+// Note: On protoboard < v0.3, this reuses the stepper MODE2 pin!
+#define ENABLE_SERIAL
