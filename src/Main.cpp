@@ -27,6 +27,7 @@ struct Commands {
   enum {
     GET_LAST_STATUS = 0x80,
     SET_STATE = 0x81,
+    GET_MEASUREMENT = 0x82,
   };
 };
 
@@ -96,6 +97,20 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
       stepper.set_reversed(reversed);
 
       return cmd_result(Status::COMMAND_OK);
+    }
+    case Commands::GET_MEASUREMENT: {
+      constexpr size_t N = ir_sensor.ADC_NUM_CHANNELS;
+      // Return last raw measurement, mostly for debugging
+      if (len != 0 || maxLen < N)
+        return cmd_result(Status::INVALID_ARGUMENTS);
+
+      //ir_sensor.get_last_reading((uint8_t (&)[N])dataout);
+      ir_sensor.get_last_reading(*(uint8_t (*)[N])dataout);
+      //uint8_t d[12];
+      //ir_sensor.get_last_reading(d);
+      //memcpy(dataout, d, 12);
+
+      return cmd_result(Status::COMMAND_OK, N);
     }
     default:
       return cmd_result(Status::COMMAND_NOT_SUPPORTED);
