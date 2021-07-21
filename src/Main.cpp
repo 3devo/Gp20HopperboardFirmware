@@ -130,8 +130,8 @@ void setup() {
   // Use fast-mode 400kHz speed. PCA9955B can go up to 1Mhz and MAX11600
   // up to 1.7Mhz, but limit speed to decrease noise susceptibility.
   // Also, HS mode seems to require additional handshaking.
-  WireIR.setClock(400000);
   WireIR.begin();
+  WireIR.setClock(400000);
 
   general_call_reset(WireIR);
   // PCA9955B needs max 1ms
