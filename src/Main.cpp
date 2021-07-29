@@ -66,6 +66,17 @@ void general_call_reset(TwoWire& wire) {
   wire.endTransmission();
 }
 
+static bool reset_requested = false;
+
+void resetSystem() {
+  // This is called by BaseProtocol on an incoming general call reset.
+  // Rather then resetting immediately, let the mainloop do it, to
+  // prevent resetting halfway an I²C transaction, which might leave the
+  // bus blocked.
+  reset_requested = true;
+}
+
+
 // Note: This runs inside an ISR, so be sure to use volatile and disable
 // interrupts elsewhere as appropriate.
 cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *dataout, uint8_t maxLen) {
@@ -171,4 +182,7 @@ void loop() {
 
   if (ir_sensor.error_occured() || stepper.error_occured())
     assert_interrupt_pin();
+
+  if (reset_requested)
+      NVIC_SystemReset();
 }
