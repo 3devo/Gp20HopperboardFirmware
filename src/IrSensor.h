@@ -40,7 +40,5 @@ class IrSensor {
     void set_leds_pwm(uint8_t dc);
     void read_adc(uint8_t (&output)[ADC_NUM_CHANNELS]);
 
-    #if defined(ENABLE_SERIAL)
     void print_measurement(const char* title, const uint8_t (&output)[ADC_NUM_CHANNELS]);
-    #endif
 };
