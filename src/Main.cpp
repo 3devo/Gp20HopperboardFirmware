@@ -13,6 +13,9 @@
 #include "Config.h"
 #include "Stepper.h"
 #include "IrSensor.h"
+#include "SharedConstants.h"
+
+using namespace hbfirmware;
 
 #if defined(ENABLE_SERIAL)
 HardwareSerial DebugSerial(DEBUG_TX);
@@ -22,14 +25,6 @@ TwoWire WireIR(IRBOARD_SDA, IRBOARD_SCL);
 
 Stepper stepper(STEPPER_NENBL, STEPPER_DIR, STEPPER_STEP, STEPPER_NFAULT);
 IrSensor ir_sensor(WireIR, LED_DRIVER_ADDR, ADC_ADDR);
-
-struct Commands {
-  enum {
-    GET_LAST_STATUS = 0x80,
-    SET_STATE = 0x81,
-    GET_MEASUREMENT = 0x82,
-  };
-};
 
 #if defined(ENABLE_SERIAL)
 static ssize_t uart_putchar (void *, const char *buf, size_t len) {
