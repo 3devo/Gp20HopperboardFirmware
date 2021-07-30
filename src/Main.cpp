@@ -77,7 +77,7 @@ void resetSystem() {
 cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *dataout, uint8_t maxLen) {
   switch (cmd) {
     case Commands::GET_LAST_STATUS: {
-      if (len != 0 || maxLen < 1)
+      if (len != 0 || maxLen < 2)
         return cmd_result(Status::INVALID_ARGUMENTS);
 
       // Note that we run inside an interrupt, so there is no race condition here
