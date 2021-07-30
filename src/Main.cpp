@@ -115,11 +115,7 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
       if (len != 0 || maxLen < N)
         return cmd_result(Status::INVALID_ARGUMENTS);
 
-      //ir_sensor.get_last_reading((uint8_t (&)[N])dataout);
       ir_sensor.get_last_reading(*(uint8_t (*)[N])dataout);
-      //uint8_t d[12];
-      //ir_sensor.get_last_reading(d);
-      //memcpy(dataout, d, 12);
 
       return cmd_result(Status::COMMAND_OK, N);
     }
