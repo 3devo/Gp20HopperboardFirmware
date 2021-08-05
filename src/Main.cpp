@@ -74,6 +74,8 @@ void resetSystem() {
 
 // Note: This runs inside an ISR, so be sure to use volatile and disable
 // interrupts elsewhere as appropriate.
+// Also, debug prints that fill up the buffer will lock up the
+// firmware...
 cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *dataout, uint8_t maxLen) {
   switch (cmd) {
     case Commands::GET_LAST_STATUS: {
@@ -95,9 +97,8 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
       uint16_t speed = datain[0] << 8 | datain[1];
       bool enabled = datain[2];
       bool reversed = datain[3];
-      #if defined(ENABLE_SERIAL)
-      printf("SET_STATE enabled=%u, speed=%u, reversed=%u\n", enabled, speed, reversed);
-      #endif
+      //Disabled, locks up ISR
+      //printf("SET_STATE enabled=%u, speed=%u, reversed=%u\n", enabled, speed, reversed);
       stepper.set_speed(speed);
       stepper.set_enabled(enabled);
       stepper.set_reversed(reversed);
