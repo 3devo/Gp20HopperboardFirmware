@@ -5,7 +5,7 @@
 // firmware, to prevent duplication of constants.
 
 namespace hbfirmware {
-  enum class Commands {
+  enum class Command {
     GET_LAST_STATUS = 0x80,
     SET_STATE = 0x81,
     GET_MEASUREMENT = 0x82,

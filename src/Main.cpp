@@ -77,8 +77,8 @@ void resetSystem() {
 // Also, debug prints that fill up the buffer will lock up the
 // firmware...
 cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *dataout, uint8_t maxLen) {
-  switch ((Commands)cmd) {
-    case Commands::GET_LAST_STATUS: {
+  switch ((Command)cmd) {
+    case Command::GET_LAST_STATUS: {
       if (len != 0 || maxLen < 2)
         return cmd_result(Status::INVALID_ARGUMENTS);
 
@@ -90,7 +90,7 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
 
       return cmd_result(Status::COMMAND_OK, 2);
     }
-    case Commands::SET_STATE: {
+    case Command::SET_STATE: {
       if (len != 4)
         return cmd_result(Status::INVALID_ARGUMENTS);
 
@@ -105,7 +105,7 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
 
       return cmd_result(Status::COMMAND_OK);
     }
-    case Commands::GET_MEASUREMENT: {
+    case Command::GET_MEASUREMENT: {
       constexpr size_t N = ir_sensor.ADC_NUM_CHANNELS;
       // Return last raw measurement, mostly for debugging
       if (len != 0 || maxLen < N)
