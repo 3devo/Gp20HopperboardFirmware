@@ -19,8 +19,8 @@ class IrSensor {
     struct ErrorFlags {
       enum {
         LED_WRITE_ERROR = (1 << 0),
-        ADC_WRITE_ERROR = (1 << 0),
-        ADC_READ_ERROR  = (1 << 0),
+        ADC_WRITE_ERROR = (1 << 1),
+        ADC_READ_ERROR  = (1 << 2),
       };
     };
 
