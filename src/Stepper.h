@@ -32,7 +32,7 @@ class Stepper {
     }
 
     void set_reversed(bool reversed) {
-        digitalWrite(STEPPER_DIR, reversed ? LOW : HIGH);
+        digitalWrite(this->pin_dir, reversed ? LOW : HIGH);
     }
 
     void set_speed(uint16_t freq) {
