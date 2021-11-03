@@ -54,6 +54,42 @@ void IrSensor::print_measurement(const char *title, const uint8_t (&m)[ADC_NUM_C
 #endif
 }
 
+void IrSensor::start_calibration() {
+  memset(this->min_value, 0, sizeof(this->min_value));
+  memset(this->max_value, 0, sizeof(this->max_value));
+}
+
+void IrSensor::calibrate() {
+  for (uint8_t i = 0; i < ADC_NUM_CHANNELS; ++i) {
+    if (this->last_measurement[i] > this->min_value[i])
+      this->min_value[i] = this->last_measurement[i];
+  }
+}
+
+void IrSensor::set_detection_threshold(uint16_t threshold) {
+  this->detection_threshold = threshold;
+}
+
+void IrSensor::start_detection() {
+  this->detected_material = 0;
+}
+
+bool IrSensor::detect_material() {
+  if (this->detected_material < this->detection_threshold) {
+    uint16_t sum = 0;
+    for (uint8_t i = 0; i < ADC_NUM_CHANNELS; ++i)
+      sum += this->last_measurement[i] - this->min_value[i];
+    // TODO: Include measurement interval (normalize to per second or
+    // so)?
+    // TODO: Include max value (ambient light)?
+
+    // TODO: Prevent overflow
+    this->detected_material += sum;
+  }
+
+  return (this->detected_material > this->detection_threshold);
+}
+
 void IrSensor::config_leds(uint8_t reg, uint8_t val) {
   // PCA9955B: Write register address and value to write to register
   this->wire.beginTransmission(this->leds_addr);

@@ -26,6 +26,14 @@ TwoWire WireIR(IRBOARD_SDA, IRBOARD_SCL);
 Stepper stepper(STEPPER_NENBL, STEPPER_DIR, STEPPER_STEP, STEPPER_NFAULT);
 IrSensor ir_sensor(WireIR, LED_DRIVER_ADDR, ADC_ADDR);
 
+
+static uint16_t calibrate_time;
+static uint16_t detection_timeout;
+static FeedResult feed_result = FeedResult::NONE;
+
+static State state;
+static uint32_t state_since;
+
 #if defined(ENABLE_SERIAL)
 static ssize_t uart_putchar (void *, const char *buf, size_t len) {
   return DebugSerial.write(buf, len);
@@ -71,6 +79,34 @@ void resetSystem() {
   reset_requested = true;
 }
 
+void set_state(State new_state) {
+  state = new_state;
+
+  switch (new_state) {
+    case State::CALIBRATING:
+      stepper.set_enabled(false);
+      ir_sensor.start_calibration();
+      break;
+
+    case State::FEEDING:
+      stepper.set_enabled(true);
+      ir_sensor.start_detection();
+      break;
+
+    case State::MEASURING:
+      stepper.set_enabled(false);
+      break;
+  }
+
+  state_since = millis();
+  assert_interrupt_pin();
+}
+
+uint8_t get_and_clear_feed_result() {
+  auto result = feed_result;
+  result = FeedResult::NONE;
+  return (uint8_t)result;
+}
 
 // Note: This runs inside an ISR, so be sure to use volatile and disable
 // interrupts elsewhere as appropriate.
@@ -79,7 +115,7 @@ void resetSystem() {
 cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *dataout, uint8_t maxLen) {
   switch ((Command)cmd) {
     case Command::GET_LAST_STATUS: {
-      if (len != 0 || maxLen < 2)
+      if (len != 0 || maxLen < 4)
         return cmd_result(Status::INVALID_ARGUMENTS);
 
       // Note that we run inside an interrupt, so there is no race condition here
@@ -87,8 +123,10 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
 
       dataout[0] = ir_sensor.get_and_clear_errors();
       dataout[1] = stepper.get_and_clear_errors();
+      dataout[2] = get_and_clear_feed_result();
+      dataout[3] = (uint8_t)state;
 
-      return cmd_result(Status::COMMAND_OK, 2);
+      return cmd_result(Status::COMMAND_OK, 4);
     }
     case Command::SET_STATE: {
       if (len != 4)
@@ -102,6 +140,8 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
       stepper.set_speed(speed);
       stepper.set_enabled(enabled);
       stepper.set_reversed(reversed);
+      //TODO: Disable feeding state here? Or have other command to abort
+      // START_FEEDING
 
       return cmd_result(Status::COMMAND_OK);
     }
@@ -114,6 +154,20 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
       ir_sensor.get_last_reading(*(uint8_t (*)[N])dataout);
 
       return cmd_result(Status::COMMAND_OK, N);
+    }
+    case Command::START_FEEDING: {
+      if (len != 6)
+        return cmd_result(Status::INVALID_ARGUMENTS);
+
+      calibrate_time = datain[0] << 8 | datain[1];
+      uint16_t detection_threshold = datain[2] << 8 | datain[3];
+      detection_timeout = datain[4] << 8 | datain[5];
+
+      ir_sensor.set_detection_threshold(detection_threshold);
+      set_state(State::CALIBRATING);
+      feed_result = FeedResult::NONE;
+
+      return cmd_result(Status::COMMAND_OK);
     }
     default:
       return cmd_result(Status::COMMAND_NOT_SUPPORTED);
@@ -172,7 +226,28 @@ void loop() {
   bool print = (loop_count++ % 512) == 0;
   ir_sensor.do_reading(print);
 
-  if (ir_sensor.error_occured() || stepper.error_occured())
+  switch(state) {
+    case State::CALIBRATING:
+      ir_sensor.calibrate();
+      if (millis() - state_since >= calibrate_time)
+        set_state(State::FEEDING);
+      break;
+
+    case State::FEEDING:
+      if (ir_sensor.detect_material()) {
+        set_state(State::MEASURING);
+        feed_result = FeedResult::DETECTED;
+      }
+      if (millis() - state_since >= detection_timeout) {
+        set_state(State::MEASURING);
+        feed_result = FeedResult::TIMEOUT;
+      }
+      break;
+  }
+
+  if (ir_sensor.error_occured()
+      || stepper.error_occured()
+      || feed_result != FeedResult::NONE)
     assert_interrupt_pin();
 
   if (reset_requested)
