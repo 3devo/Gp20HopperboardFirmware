@@ -24,16 +24,19 @@ void IrSensor::setup() {
 
   //IREFALL: Current 0-255.
   config_leds(Pca9955bRegs::IREFALL, 127);
+
+  // TODO: less hardcoded, set this parameter by mainboard?
+  detection_threshold = 5;
+
+  memset(this->min_value, UINT8_MAX, sizeof(this->min_value));
 }
 
 void IrSensor::do_reading(bool print) {
   uint8_t measurement[ADC_NUM_CHANNELS];
 
-  set_leds_pwm(255);
   // ADC measures during I²C transaction (stretching the clock), so no
   // need to wait for ADC measurement to complete before reading.
   read_adc(measurement);
-  set_leds_pwm(0);
 
   // Disable interrupts to allow atomically reading the last_measurement
   // from an ISR
@@ -51,6 +54,43 @@ void IrSensor::print_measurement(const char *title, const uint8_t (&m)[ADC_NUM_C
   for (uint8_t i = 0; i < ADC_NUM_CHANNELS; ++i)
     printf(" %03u", m[i]);
   printf("\n");
+#endif
+}
+
+void IrSensor::detect_material(bool print_values) {
+  this->do_reading(print_values);
+
+  uint32_t sum = 0, max_sum = 0;
+  for (uint8_t i = 0; i < ADC_NUM_CHANNELS; ++i) {
+    if (this->last_measurement[i] < this->min_value[i])
+      this->min_value[i] = this->last_measurement[i];
+
+    const uint8_t threshold = this->min_value[i] + this->detection_threshold;
+    max_sum += UINT8_MAX - threshold;
+
+    if (this->last_measurement[i] > threshold)
+      sum += (int32_t)this->last_measurement[i] - threshold;
+  }
+  // TODO: Include measurement interval (normalize to per second or so)?
+  // TODO: Include max value (ambient light)?
+
+  uint8_t result = 0;
+  if (max_sum)
+    result = sum * 100 / max_sum;
+
+  noInterrupts();
+  if (result > this->detected_blockage_pct_max)
+    this->detected_blockage_pct_max = result;
+
+  this->detected_blockage_pct_sum += result;
+  this->detected_blockage_count++;
+
+  this->detected_blockage_pct_last = result;
+  interrupts();
+
+#if defined(ENABLE_SERIAL)
+  printf("material result= %d\%\n", result);
+  printf("detected_blockage_pct_sum= %d\%, detected_blockage_count=%d\n", detected_blockage_pct_sum, detected_blockage_count);
 #endif
 }
 
@@ -101,4 +141,26 @@ void IrSensor::read_adc(uint8_t (&output)[ADC_NUM_CHANNELS]) {
 
 void IrSensor::get_last_reading(uint8_t (&output)[ADC_NUM_CHANNELS]) {
   memcpy(output, this->last_measurement, sizeof(output));
+}
+
+uint8_t IrSensor::get_last_blockage_pct() {
+  return this->detected_blockage_pct_last;
+}
+
+uint8_t IrSensor::get_and_clear_detected_blockage_pct_max() {
+  const uint8_t temp = this->detected_blockage_pct_max;
+  this->detected_blockage_pct_max = 0;
+  return temp;
+}
+
+uint8_t IrSensor::get_and_clear_detected_blockage_pct_avg() {
+  uint8_t result = 0;
+
+  if (this->detected_blockage_count)
+    result = this->detected_blockage_pct_sum / this->detected_blockage_count;
+
+  this->detected_blockage_pct_sum = 0;
+  this->detected_blockage_count = 0;
+
+  return result;
 }

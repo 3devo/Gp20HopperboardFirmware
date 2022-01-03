@@ -26,6 +26,10 @@ TwoWire WireIR(IRBOARD_SDA, IRBOARD_SCL);
 Stepper stepper(STEPPER_NENBL, STEPPER_DIR, STEPPER_STEP, STEPPER_NFAULT);
 IrSensor ir_sensor(WireIR, LED_DRIVER_ADDR, ADC_ADDR);
 
+static SensorState state = SensorState::STOPPED;
+static bool adjust_leds = false;
+static uint8_t new_led_brightness = 0;
+
 #if defined(ENABLE_SERIAL)
 static ssize_t uart_putchar (void *, const char *buf, size_t len) {
   return DebugSerial.write(buf, len);
@@ -71,6 +75,23 @@ void resetSystem() {
   reset_requested = true;
 }
 
+void set_sensor_state(SensorState new_state) {
+  state = new_state;
+
+  switch(state) {
+    case SensorState::MEASURING:
+      new_led_brightness = 0xFF;
+      adjust_leds = true;
+
+      ir_sensor.get_and_clear_detected_blockage_pct_max();
+      ir_sensor.get_and_clear_detected_blockage_pct_avg();
+      break;
+    case SensorState::STOPPED:
+      new_led_brightness = 0;
+      adjust_leds = true;
+      break;
+  }
+}
 
 // Note: This runs inside an ISR, so be sure to use volatile and disable
 // interrupts elsewhere as appropriate.
@@ -79,7 +100,7 @@ void resetSystem() {
 cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *dataout, uint8_t maxLen) {
   switch ((Command)cmd) {
     case Command::GET_LAST_STATUS: {
-      if (len != 0 || maxLen < 2)
+      if (len != 0 || maxLen < 3)
         return cmd_result(Status::INVALID_ARGUMENTS);
 
       // Note that we run inside an interrupt, so there is no race condition here.
@@ -87,21 +108,24 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
 
       dataout[0] = ir_sensor.get_and_clear_errors();
       dataout[1] = stepper.get_and_clear_errors();
+      dataout[2] = (uint8_t)state;
 
-      return cmd_result(Status::COMMAND_OK, 2);
+      return cmd_result(Status::COMMAND_OK, 3);
     }
     case Command::SET_STATE: {
-      if (len != 4)
+      if (len != 5)
         return cmd_result(Status::INVALID_ARGUMENTS);
 
       uint16_t speed = datain[0] << 8 | datain[1];
       bool enabled = datain[2];
       bool reversed = datain[3];
+      SensorState new_state = static_cast<SensorState>(datain[4]);
       //Disabled, locks up ISR
       //printf("SET_STATE enabled=%u, speed=%u, reversed=%u\n", enabled, speed, reversed);
       stepper.set_speed(speed);
       stepper.set_enabled(enabled);
       stepper.set_reversed(reversed);
+      set_sensor_state(new_state);
 
       return cmd_result(Status::COMMAND_OK);
     }
@@ -114,6 +138,18 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
       ir_sensor.get_last_reading(*(uint8_t (*)[N])dataout);
 
       return cmd_result(Status::COMMAND_OK, N);
+    }
+    case Command::GET_AND_CLEAR_SENSOR_VALUES: {
+      if (len != 0 || maxLen < 2)
+        return cmd_result(Status::INVALID_ARGUMENTS);
+
+      // Note that we run inside an interrupt, so there is no race condition here.
+      clear_interrupt_pin();
+
+      dataout[0] = ir_sensor.get_and_clear_detected_blockage_pct_max();
+      dataout[1] = ir_sensor.get_and_clear_detected_blockage_pct_avg();
+
+      return cmd_result(Status::COMMAND_OK, 2);
     }
     default:
       return cmd_result(Status::COMMAND_NOT_SUPPORTED);
@@ -169,8 +205,17 @@ void setup() {
 
 static uint16_t loop_count = 0;
 void loop() {
-  bool print = (loop_count++ % 512) == 0;
-  ir_sensor.do_reading(print);
+  if (adjust_leds) {
+    adjust_leds = false;
+    ir_sensor.set_leds_pwm(new_led_brightness);
+  }
+
+  switch(state) {
+    case SensorState::MEASURING:
+      bool print = (loop_count++ % 512) == 0;
+      ir_sensor.detect_material(print);
+      break;
+  }
 
   if (ir_sensor.error_occured() || stepper.error_occured())
     assert_interrupt_pin();
