@@ -176,5 +176,5 @@ void loop() {
     assert_interrupt_pin();
 
   if (reset_requested)
-      NVIC_SystemReset();
+    NVIC_SystemReset();
 }
