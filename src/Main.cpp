@@ -41,7 +41,7 @@ static cookie_io_functions_t functions = {
 
 #if defined(ENABLE_SERIAL)
 // Override the (weak) error handler defined by the STM32 core to
-// // capture errors with our usual handling.
+// capture errors with our usual handling.
 void _Error_Handler(const char *file, int line) {
   printf("STM32 core error: %s:%d\n", file, line);
 }
@@ -82,7 +82,7 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
       if (len != 0 || maxLen < 2)
         return cmd_result(Status::INVALID_ARGUMENTS);
 
-      // Note that we run inside an interrupt, so there is no race condition here
+      // Note that we run inside an interrupt, so there is no race condition here.
       clear_interrupt_pin();
 
       dataout[0] = ir_sensor.get_and_clear_errors();
@@ -107,7 +107,7 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
     }
     case Command::GET_MEASUREMENT: {
       constexpr size_t N = ir_sensor.ADC_NUM_CHANNELS;
-      // Return last raw measurement, mostly for debugging
+      // Return last raw sensor measurement, mostly for debugging the hopper sensor.
       if (len != 0 || maxLen < N)
         return cmd_result(Status::INVALID_ARGUMENTS);
 
@@ -124,9 +124,9 @@ void setup() {
 #if defined(ENABLE_SERIAL)
   DebugSerial.begin(1000000);
   DebugSerial.println("Starting");
-  /* Setup stdout for printf. This is a GNU-specific extension to libc. */
+  // Setup stdout for printf. This is a GNU-specific extension to libc.
   stdout = fopencookie(NULL, "w", functions);
-  /* Disable buffering, so the callbacks get called right away */
+  // Disable buffering, so the callbacks get called right away.
   setbuf(stdout, nullptr);
 #endif
 
@@ -137,10 +137,10 @@ void setup() {
   WireIR.setClock(400000);
 
   general_call_reset(WireIR);
-  // PCA9955B needs max 1ms
+  // PCA9955B needs max 1ms.
   delay(1);
 
-  // Configure PA11/PA12 to disable remapping of PA9/PA10
+  // Configure PA11/PA12 to disable remapping of PA9/PA10.
   // https://github.com/stm32duino/Arduino_Core_STM32/issues/1180
   pinMode(PA11, INPUT);
   pinMode(PA12, INPUT);
