@@ -1,3 +1,6 @@
 sketch.json
 arduino-cli.yaml
 compile_commands.json
+*.swp
+*.swo
+.clangd
