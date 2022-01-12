@@ -65,7 +65,9 @@ void IrSensor::detect_material(bool print_values) {
     if (this->last_measurement[i] < this->min_value[i])
       this->min_value[i] = this->last_measurement[i];
 
-    const uint8_t threshold = this->min_value[i] + this->detection_threshold;
+    uint16_t threshold = this->min_value[i] + this->detection_threshold;
+    if (threshold > UINT8_MAX)
+      threshold = UINT8_MAX;
     max_sum += UINT8_MAX - threshold;
 
     if (this->last_measurement[i] > threshold)
