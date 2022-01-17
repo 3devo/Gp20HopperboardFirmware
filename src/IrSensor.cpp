@@ -145,6 +145,10 @@ void IrSensor::get_last_reading(uint8_t (&output)[ADC_NUM_CHANNELS]) {
   memcpy(output, this->last_measurement, sizeof(output));
 }
 
+void IrSensor::get_min_values(uint8_t (&output)[ADC_NUM_CHANNELS]) {
+  memcpy(output, this->min_value, sizeof(output));
+}
+
 uint8_t IrSensor::get_last_blockage_pct() {
   return this->detected_blockage_pct_last;
 }

@@ -132,12 +132,13 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
     case Command::GET_MEASUREMENT: {
       constexpr size_t N = ir_sensor.ADC_NUM_CHANNELS;
       // Return last raw sensor measurement, mostly for debugging the hopper sensor.
-      if (len != 0 || maxLen < N)
+      if (len != 0 || maxLen < 2 * N)
         return cmd_result(Status::INVALID_ARGUMENTS);
 
       ir_sensor.get_last_reading(*(uint8_t (*)[N])dataout);
+      ir_sensor.get_min_values(*(uint8_t (*)[N])(dataout + N));
 
-      return cmd_result(Status::COMMAND_OK, N);
+      return cmd_result(Status::COMMAND_OK, 2 * N);
     }
     case Command::GET_AND_CLEAR_SENSOR_VALUES: {
       if (len != 0 || maxLen < 2)

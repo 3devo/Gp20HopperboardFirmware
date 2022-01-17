@@ -16,6 +16,7 @@ class IrSensor {
     void set_leds_pwm(uint8_t dc);
     void do_reading(bool print);
     void get_last_reading(uint8_t (&output)[ADC_NUM_CHANNELS]);
+    void get_min_values(uint8_t (&output)[ADC_NUM_CHANNELS]);
 
     void detect_material(bool print_values);
 
