@@ -23,6 +23,7 @@ class IrSensor {
     uint8_t get_last_blockage_pct();
     uint8_t get_and_clear_detected_blockage_pct_max();
     uint8_t get_and_clear_detected_blockage_pct_avg();
+    void apply_correction();
 
     struct ErrorFlags {
       enum {
@@ -50,6 +51,9 @@ class IrSensor {
     uint16_t detected_blockage_pct_sum; // %
     uint16_t detected_blockage_count;
     uint8_t detected_blockage_pct_last; // %
+
+    int8_t correction_budget;
+    const int8_t MAX_CORRECTION_BUDGET = 20;
 
     void config_leds(uint8_t reg, uint8_t val);
     void config_adc(uint8_t cfg);

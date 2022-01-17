@@ -150,6 +150,12 @@ cmd_result processCommand(uint8_t cmd, uint8_t * datain, uint8_t len, uint8_t *d
       dataout[0] = ir_sensor.get_and_clear_detected_blockage_pct_max();
       dataout[1] = ir_sensor.get_and_clear_detected_blockage_pct_avg();
 
+      // As a side effect, apply correction (since we know this command
+      // will be called periodically).
+      // TODO: Apply this correction on our own using our own timer, to
+      // not be dependent on the command timing.
+      ir_sensor.apply_correction();
+
       return cmd_result(Status::COMMAND_OK, 2);
     }
     default:

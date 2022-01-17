@@ -170,3 +170,17 @@ uint8_t IrSensor::get_and_clear_detected_blockage_pct_avg() {
 
   return result;
 }
+
+void IrSensor::apply_correction() {
+  if (this->correction_budget < MAX_CORRECTION_BUDGET)
+    this->correction_budget += 2;
+
+  if (this->correction_budget > 0) {
+    for (uint8_t i = 0; i < ADC_NUM_CHANNELS; ++i) {
+      if (this->last_measurement[i] > this->min_value[i]) {
+        ++this->min_value[i];
+        --this->correction_budget;
+      }
+    }
+  }
+}
