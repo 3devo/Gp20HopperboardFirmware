@@ -1,5 +1,16 @@
 #pragma once
 
+/*
+ * Copyright (C) 2017-2025 3devo (http://www.3devo.eu)
+ *
+ * Permission is hereby granted, free of charge, to anyone obtaining
+ * a copy of this document, to do whatever they want with them without
+ * any restriction, including, but not limited to, copying, modification
+ * and redistribution.
+ *
+ * NO WARRANTY OF ANY KIND IS PROVIDED.
+ */
+
 // This file is intended to be shared between the child and mainboard
 // firmware, to prevent duplication of constants.
 
